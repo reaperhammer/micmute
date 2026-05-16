@@ -5,17 +5,18 @@ using System.Windows.Forms;
 using System.Reflection;
 using System.IO;
 using System.Linq;
+using System.Media;
 
 [assembly: AssemblyTitle("MicMute2")]
 [assembly: AssemblyDescription("Edited by rjcncpt")]
-[assembly: AssemblyInformationalVersion("Edit date: 02/10/2026")]
+[assembly: AssemblyInformationalVersion("Edit date: 16/05/2026")]
 [assembly: AssemblyCompanyAttribute("Source: AveYo")]
 
 namespace MicMute
 {
     class Program
     {
-        private const string Version = "v2.1.1";
+        private const string Version = "v2.1.2";
 
         private const int WM_APPCOMMAND = 0x319;
         private const int APPCOMMAND_MICROPHONE_VOLUME_MUTE = 0x180000;
@@ -54,6 +55,7 @@ namespace MicMute
         private static ToolStripMenuItem exitItem;
         private static HotkeyMessageWindow hotkeyWindow;
         private static Config config;
+        private static SoundPlayer soundPlayer;
 
         [STAThread]
         static void Main(string[] args)
@@ -439,6 +441,43 @@ namespace MicMute
             
             UpdateTrayIcon();
             SaveMicStateToFile();
+            PlaySound(muted);
+        }
+
+        private static void PlaySound(bool muted)
+        {
+            SoundPlayer newPlayer = null;
+            try
+            {
+                string exeDir = Path.GetDirectoryName(Application.ExecutablePath);
+                string wavFile = Path.Combine(exeDir, muted ? "mic_off.wav" : "mic_on.wav");
+                
+                if (!File.Exists(wavFile))
+                    return;
+
+                newPlayer = new SoundPlayer(wavFile);
+                
+                // Clean up previous player safely
+                SoundPlayer oldPlayer = soundPlayer;
+                soundPlayer = newPlayer;
+                newPlayer = null; // marked disposed below
+                
+                if (oldPlayer != null)
+                {
+                    try { oldPlayer.Stop(); oldPlayer.Dispose(); } catch { }
+                }
+                
+                soundPlayer.Play();
+            }
+            catch (Exception)
+            {
+                // Sound feedback is best-effort — fail silently
+            }
+            finally
+            {
+                if (newPlayer != null)
+                    try { newPlayer.Dispose(); } catch { }
+            }
         }
 
         private static void UpdateTrayIcon()

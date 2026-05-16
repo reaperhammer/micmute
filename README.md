@@ -1,10 +1,11 @@
 # MicMute 2
 
-**Version:** v2.1.1  
-**Last Updated:** 2026-02-10  
+**Version:** v2.1.2  
+**Last Updated:** 2026-05-16  
 **Authors:**  
 - AveYo (Original, no longer available on GitHub)  
-- rjcncpt (Improvements)
+- rjcncpt (Improvements)  
+- Clawd 🦞 (sound feedback feature)
 
 MicMute is a small Windows utility that allows you to quickly mute or unmute your microphone via a system tray icon. It displays the current microphone status (on/off) and stores the state in a configuration file.
 
@@ -20,6 +21,7 @@ MicMute is a small Windows utility that allows you to quickly mute or unmute you
 - **Default startup state**: Option to automatically set the microphone state when the program starts
 - **Automatic state persistence**: Microphone status and settings are stored in a configuration file
 - **Context menu**: Right-click for additional options (Mute/Unmute, Settings, Exit)
+- **Sound files**: Optional `mic_on.wav` / `mic_off.wav` in the exe directory enable audio feedback. See [Sound Feedback](#sound-feedback) for generation notes and licensing.
 
 <img width="446" height="518" alt="image" src="https://github.com/user-attachments/assets/3c3ac07e-8555-4a56-a594-c3b4286fee0e" />
 
@@ -29,6 +31,7 @@ MicMute is a small Windows utility that allows you to quickly mute or unmute you
 - Windows (tested on Windows 10/11; compatible from Windows Vista)
 - .NET Framework 4.0 or higher
 - Two icon files: `mic_on.ico` and `mic_off.ico` (must be located in the same directory as the executable)
+- Optional: `mic_on.wav` and `mic_off.wav` for audio feedback (see [Sound Feedback](#sound-feedback))
 
 ---
 
@@ -43,7 +46,7 @@ MicMute is a small Windows utility that allows you to quickly mute or unmute you
    - You can create your own icons or download free ones from sites such as IconArchive
 
 3. **Compile**
-   - Open a Command Prompt (CMD) and run the following command to compile the code:
+   - Double-click `buildme.bat` in the repo root to compile, OR manually:
    ```
    C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe /out:"C:\micmute\MicMute2.exe" /target:winexe /platform:anycpu /optimize /nologo "C:\micmute\MicMute.cs"
    ```
@@ -76,7 +79,21 @@ The microphone state and all settings are stored in **`C:\micmute\MicMuteConfig.
 
 ---
 
-## Notes
+## Sound Feedback
+
+MicMute can play short audio cues when the microphone is muted or unmuted. This is useful for keyboard firmware integration (e.g., programming a numpad key to trigger mic mute) — you get audible confirmation even while gaming.
+
+### Requirements
+- `mic_on.wav` — plays when microphone is unmuted
+- `mic_off.wav` — plays when microphone is muted
+- Both files must be in the same directory as `MicMute2.exe`
+- Format: 16-bit PCM, 22.05 kHz or 44.1 kHz sample rate, mono
+-建议: keep files under 2 seconds to avoid noticeable delay
+
+### Generating your own audio files
+Any TTS tool can generate suitable WAV files. The included samples were generated with [Mistral Voxtral TTS](https://mistral.ai/news/voxtral). Note that Voxtral TTS output is licensed under **CC BY-NC 4.0** — free for open-source use, but requires a commercial license for paid products.
+
+### Notes
 - **Icons**: Ensure `mic_on.ico` and `mic_off.ico` are present in `C:\micmute\`, as they are required for the tray icon
 - **Configuration file**: The microphone state is stored in **`C:\micmute\MicMuteConfig.txt`**
 - **Language switching**: The language can be changed at any time in settings and is applied immediately
