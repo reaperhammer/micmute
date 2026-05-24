@@ -1,11 +1,11 @@
 # MicMute 2
 
 **Version:** v2.1.2  
-**Last Updated:** 2026-05-16  
+**Last Updated:** 2026-05-24  
 **Authors:**  
 - AveYo (Original, no longer available on GitHub)  
 - rjcncpt (Improvements)  
-- Clawd 🦞 (sound feedback feature)
+- reaperhammer (Core Audio integration & anti-cheat safety)
 
 MicMute is a small Windows utility that allows you to quickly mute or unmute your microphone via a system tray icon. It displays the current microphone status (on/off) and stores the state in a configuration file.
 
@@ -15,6 +15,7 @@ MicMute is a small Windows utility that allows you to quickly mute or unmute you
 
 ## Features
 - **System tray icon**: Indicates whether the microphone is enabled or muted
+- **Core Audio Integration**: Toggles the system microphone state directly via Windows Core Audio API (WASAPI) instead of injecting windows messages. 100% safe to use alongside aggressive anti-cheat systems. Works reliably with modern applications like the Windows 11 Sound Recorder.
 - **Flexible click behavior**: Choose between single-click or double-click to toggle the microphone
 - **Multi-language support**: German and English with live language switching in settings
 - **Global hotkey**: Application-wide control using a configurable key combination
@@ -62,6 +63,13 @@ MicMute is a small Windows utility that allows you to quickly mute or unmute you
      - Enable **Set microphone to default state on startup** and choose the desired default state
    - Click behavior (single-click or double-click) can also be configured in settings
    - Language can be switched between English and German
+
+> [!IMPORTANT]
+> **Anti-Cheat Safe & Running as Administrator**
+> MicMute 2 uses the native Windows Core Audio API to mute/unmute your microphone at the hardware/OS level. This means it is 100% safe to use alongside aggressive anti-cheat software (like Vanguard, Easy Anti-Cheat, BattlEye, etc.) and will not trigger any bans since it never injects code or window messages (like `WM_APPCOMMAND`) into game windows. It also ensures 100% compatibility with modern applications like the Windows 11 Sound Recorder.
+>
+> However, if you are playing a game that runs as Administrator (which is common for games with high-privilege anti-cheats, e.g. *Naraka: Bladepoint*), you **must** run `MicMute2.exe` as **Administrator** as well. This is due to Windows **UIPI** (User Interface Privilege Isolation), which prevents standard applications from detecting global hotkeys (`RegisterHotKey`) while a high-privilege window is active. Rest assured, MicMute only uses Administrator rights to register the global hotkey and does not touch or interact with your game files/processes in any way.
+
 
 ---
 

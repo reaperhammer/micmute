@@ -18,18 +18,10 @@ namespace MicMute
     {
         private const string Version = "v2.1.2";
 
-        private const int WM_APPCOMMAND = 0x319;
-        private const int APPCOMMAND_MICROPHONE_VOLUME_MUTE = 0x180000;
         private const int WM_HOTKEY = 0x0312;
         private const int HOTKEY_ID = 9000;
 
         private static readonly string configFile = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "MicMuteConfig.txt");
-
-        [DllImport("user32.dll", SetLastError = false)]
-        public static extern IntPtr GetForegroundWindow();
-
-        [DllImport("user32.dll", SetLastError = false)]
-        public static extern IntPtr SendMessageW(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
@@ -40,8 +32,6 @@ namespace MicMute
         [DllImport("ole32.dll")]
         private static extern int CoCreateInstance(ref Guid clsid, IntPtr pUnkOuter, uint dwClsContext, ref Guid iid, out IntPtr ppv);
 
-        [DllImport("ole32.dll")]
-        private static extern void CoTaskMemFree(IntPtr pv);
 
         private static readonly Guid CLSID_MMDeviceEnumerator = new Guid("BCDE0395-E52F-467C-8E3D-C4579291692E");
         private static readonly Guid IID_IMMDeviceEnumerator = new Guid("A95664D2-9614-4F35-A746-DE8DB63617E6");
@@ -299,6 +289,59 @@ namespace MicMute
             }
         }
 
+        private static bool SetSystemMicrophoneMuteState(bool mute)
+        {
+            IntPtr deviceEnumerator = IntPtr.Zero;
+            IntPtr device = IntPtr.Zero;
+            IntPtr endpointVolume = IntPtr.Zero;
+
+            try
+            {
+                Guid clsid = CLSID_MMDeviceEnumerator;
+                Guid iid = IID_IMMDeviceEnumerator;
+                
+                int hr = CoCreateInstance(ref clsid, IntPtr.Zero, 1, ref iid, out deviceEnumerator);
+                if (hr != 0 || deviceEnumerator == IntPtr.Zero)
+                    return false;
+
+                var vtbl = (IMMDeviceEnumeratorVtbl)Marshal.PtrToStructure(
+                    Marshal.ReadIntPtr(deviceEnumerator), typeof(IMMDeviceEnumeratorVtbl));
+                
+                hr = vtbl.GetDefaultAudioEndpoint(deviceEnumerator, 1, 0, out device);
+                if (hr != 0 || device == IntPtr.Zero)
+                    return false;
+
+                var deviceVtbl = (IMMDeviceVtbl)Marshal.PtrToStructure(
+                    Marshal.ReadIntPtr(device), typeof(IMMDeviceVtbl));
+                
+                Guid volumeIid = IID_IAudioEndpointVolume;
+                hr = deviceVtbl.Activate(device, ref volumeIid, 0, IntPtr.Zero, out endpointVolume);
+                if (hr != 0 || endpointVolume == IntPtr.Zero)
+                    return false;
+
+                var volumeVtbl = (IAudioEndpointVolumeVtbl)Marshal.PtrToStructure(
+                    Marshal.ReadIntPtr(endpointVolume), typeof(IAudioEndpointVolumeVtbl));
+                
+                Guid eventContext = Guid.Empty;
+                hr = volumeVtbl.SetMute(endpointVolume, mute ? 1 : 0, ref eventContext);
+                
+                return hr == 0;
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                if (endpointVolume != IntPtr.Zero)
+                    Marshal.Release(endpointVolume);
+                if (device != IntPtr.Zero)
+                    Marshal.Release(device);
+                if (deviceEnumerator != IntPtr.Zero)
+                    Marshal.Release(deviceEnumerator);
+            }
+        }
+
         private static void LoadMicStateFromFile()
         {
             if (File.Exists(configFile))
@@ -366,6 +409,7 @@ namespace MicMute
             public IntPtr QueryInterface;
             public IntPtr AddRef;
             public IntPtr Release;
+            public IntPtr EnumAudioEndpoints;
             public GetDefaultAudioEndpointDelegate GetDefaultAudioEndpoint;
 
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -436,8 +480,7 @@ namespace MicMute
         {
             isMuted = muted;
             
-            IntPtr hwnd = GetForegroundWindow();
-            SendMessageW(hwnd, WM_APPCOMMAND, hwnd, (IntPtr)APPCOMMAND_MICROPHONE_VOLUME_MUTE);
+            SetSystemMicrophoneMuteState(muted);
             
             UpdateTrayIcon();
             SaveMicStateToFile();
