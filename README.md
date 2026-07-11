@@ -4,8 +4,7 @@
 **Last Updated:** 2026-05-24  
 **Authors:**  
 - AveYo (Original, no longer available on GitHub)  
-- rjcncpt (Improvements)  
-- reaperhammer (Core Audio integration for anti-cheat safety and audio feedback)
+- reaperhammer (Improvements, Core Audio integration, and audio feedback)
 
 MicMute is a small Windows utility that allows you to quickly mute or unmute your microphone via a system tray icon. It displays the current microphone status (on/off) and stores the state in a configuration file.
 
@@ -38,7 +37,7 @@ MicMute is a small Windows utility that allows you to quickly mute or unmute you
 
 ## Installation
 1. **Download**
-   - Download the [ZIP file](https://github.com/rjcncpt/micmute/releases)
+   - Download the [ZIP file](https://github.com/reaperhammer/micmute/releases)
    - Extract the archive
    - Copy the `micmute` folder to **`C:\`**
 

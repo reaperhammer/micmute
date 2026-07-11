@@ -4,8 +4,7 @@
 **Letzte Änderung:** 24.05.2026  
 **Autoren:** 
 - AveYo (Original, nicht mehr auf Github verfügbar)
-- rjcncpt (Verbesserungen)
-- reaperhammer (Core Audio-Integration & Anti-Cheat-Sicherheit)
+- reaperhammer (Verbesserungen, Core Audio-Integration & Anti-Cheat-Sicherheit)
 
 MicMute ist ein kleines Windows-Tool, das es ermöglicht, das Mikrofon per System-Tray-Icon schnell stummzuschalten oder zu aktivieren. Es zeigt den aktuellen Mikrofonzustand (an/aus) über ein Tray-Icon an und speichert diesen Zustand in einer Konfigurationsdatei.
 
@@ -38,7 +37,7 @@ MicMute ist ein kleines Windows-Tool, das es ermöglicht, das Mikrofon per Syste
 
 ## Installation
 1. **Download:**
-   - Lade die [ZIP-Datei](https://github.com/rjcncpt/micmute/releases) herunter
+   - Lade die [ZIP-Datei](https://github.com/reaperhammer/micmute/releases) herunter
    - Entpacke die ZIP-Datei
    - Kopiere das micmute-Verzeichnis nach **`C:\`**
 
