@@ -8,9 +8,13 @@ using System.Linq;
 using System.Media;
 
 [assembly: AssemblyTitle("MicMute2")]
-[assembly: AssemblyDescription("Edited by rjcncpt")]
-[assembly: AssemblyInformationalVersion("Edit date: 16/05/2026")]
-[assembly: AssemblyCompanyAttribute("Source: AveYo")]
+[assembly: AssemblyDescription("Core Audio Integration for Anti-Cheat Safety and Audio Feedback")]
+[assembly: AssemblyCompany("reaperhammer")]
+[assembly: AssemblyProduct("MicMute2")]
+[assembly: AssemblyCopyright("Copyright © 2026")]
+[assembly: AssemblyVersion("2.1.2.0")]
+[assembly: AssemblyFileVersion("2.1.2.0")]
+[assembly: AssemblyInformationalVersion("v2.1.2")]
 
 namespace MicMute
 {
