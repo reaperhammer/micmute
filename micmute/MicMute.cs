@@ -25,7 +25,10 @@ namespace MicMute
         private const int WM_HOTKEY = 0x0312;
         private const int HOTKEY_ID = 9000;
 
-        private static readonly string configFile = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "MicMuteConfig.txt");
+        private static readonly string exeDir = Path.GetDirectoryName(Application.ExecutablePath);
+        private static readonly string configFile = Path.Combine(exeDir, "MicMuteConfig.txt");
+        private static readonly string iconOnPath = Path.Combine(exeDir, "mic_on.ico");
+        private static readonly string iconOffPath = Path.Combine(exeDir, "mic_off.ico");
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
@@ -69,7 +72,7 @@ namespace MicMute
 
             trayIcon = new NotifyIcon
             {
-                Icon = isMuted ? new Icon("mic_off.ico") : new Icon("mic_on.ico"),
+                Icon = isMuted ? new Icon(iconOffPath) : new Icon(iconOnPath),
                 Text = string.Format("MicMute: Microphone is {0}", isMuted ? Translations.MicrophoneOff(config.AppLanguage) : Translations.MicrophoneOn(config.AppLanguage)),
                 Visible = true
             };
@@ -531,7 +534,7 @@ namespace MicMute
         {
             try
             {
-                trayIcon.Icon = isMuted ? new Icon("mic_off.ico") : new Icon("mic_on.ico");
+                trayIcon.Icon = isMuted ? new Icon(iconOffPath) : new Icon(iconOnPath);
                 trayIcon.Text = string.Format("MicMute: Microphone is {0}", isMuted ? Translations.MicrophoneOff(config.AppLanguage) : Translations.MicrophoneOn(config.AppLanguage));
 
                 muteItem.Visible = !isMuted;
