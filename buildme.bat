@@ -21,7 +21,7 @@ if not exist "%SRC%" (
 )
 
 echo Building MicMute2.exe...
-"%CSC%" /out:"%OUT%" /target:winexe /platform:anycpu /optimize /nologo "%SRC%"
+"%CSC%" /out:"%OUT%" /win32icon:"%~dp0micmute\mic_on.ico" /target:winexe /platform:anycpu /optimize /nologo "%SRC%"
 
 if exist "%OUT%" (
     echo SUCCESS: MicMute2.exe built successfully.
