@@ -9,7 +9,7 @@
 
 MicMute is a small Windows utility that allows you to quickly mute or unmute your microphone via a system tray icon. It displays the current microphone status (on/off) and stores the state in a configuration file.
 
-![mic-on-off](https://github.com/user-attachments/assets/5277a8af-3598-4b3c-a46c-df598fce5b6c)
+<img width="366" height="122" alt="image" src="https://github.com/user-attachments/assets/77b65a60-e687-4b6f-84f0-29c0e3754cc3" />
 
 ---
 
@@ -24,7 +24,7 @@ MicMute is a small Windows utility that allows you to quickly mute or unmute you
 - **Context menu**: Right-click for additional options (Mute/Unmute, Settings, Exit)
 - **Sound files**: Optional `mic_on.wav` / `mic_off.wav` in the exe directory enable audio feedback. See [Sound Feedback](#sound-feedback) for generation notes and licensing.
 
-<img width="446" height="518" alt="image" src="https://github.com/user-attachments/assets/3c3ac07e-8555-4a56-a594-c3b4286fee0e" />
+<img width="440" height="518" alt="image" src="https://github.com/user-attachments/assets/78d92805-ecf9-4491-b75a-df901f668908" />
 
 ---
 
