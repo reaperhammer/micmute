@@ -5,30 +5,30 @@ using System.Windows.Forms;
 using System.Reflection;
 using System.IO;
 using System.Linq;
+using System.Media;
 
 [assembly: AssemblyTitle("MicMute2")]
-[assembly: AssemblyDescription("Edited by rjcncpt")]
-[assembly: AssemblyInformationalVersion("Edit date: 02/10/2026")]
-[assembly: AssemblyCompanyAttribute("Source: AveYo")]
+[assembly: AssemblyDescription("Core Audio Integration for Anti-Cheat Safety and Audio Feedback")]
+[assembly: AssemblyCompany("reaperhammer")]
+[assembly: AssemblyProduct("MicMute2")]
+[assembly: AssemblyCopyright("Copyright © 2026")]
+[assembly: AssemblyVersion("2.1.2.0")]
+[assembly: AssemblyFileVersion("2.1.2.0")]
+[assembly: AssemblyInformationalVersion("v2.1.2")]
 
 namespace MicMute
 {
     class Program
     {
-        private const string Version = "v2.1.1";
+        private const string Version = "v2.1.2";
 
-        private const int WM_APPCOMMAND = 0x319;
-        private const int APPCOMMAND_MICROPHONE_VOLUME_MUTE = 0x180000;
         private const int WM_HOTKEY = 0x0312;
         private const int HOTKEY_ID = 9000;
 
-        private static readonly string configFile = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "MicMuteConfig.txt");
-
-        [DllImport("user32.dll", SetLastError = false)]
-        public static extern IntPtr GetForegroundWindow();
-
-        [DllImport("user32.dll", SetLastError = false)]
-        public static extern IntPtr SendMessageW(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+        private static readonly string exeDir = Path.GetDirectoryName(Application.ExecutablePath);
+        private static readonly string configFile = Path.Combine(exeDir, "MicMuteConfig.txt");
+        private static readonly string iconOnPath = Path.Combine(exeDir, "mic_on.ico");
+        private static readonly string iconOffPath = Path.Combine(exeDir, "mic_off.ico");
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
@@ -39,8 +39,6 @@ namespace MicMute
         [DllImport("ole32.dll")]
         private static extern int CoCreateInstance(ref Guid clsid, IntPtr pUnkOuter, uint dwClsContext, ref Guid iid, out IntPtr ppv);
 
-        [DllImport("ole32.dll")]
-        private static extern void CoTaskMemFree(IntPtr pv);
 
         private static readonly Guid CLSID_MMDeviceEnumerator = new Guid("BCDE0395-E52F-467C-8E3D-C4579291692E");
         private static readonly Guid IID_IMMDeviceEnumerator = new Guid("A95664D2-9614-4F35-A746-DE8DB63617E6");
@@ -54,6 +52,7 @@ namespace MicMute
         private static ToolStripMenuItem exitItem;
         private static HotkeyMessageWindow hotkeyWindow;
         private static Config config;
+        private static SoundPlayer soundPlayer;
 
         [STAThread]
         static void Main(string[] args)
@@ -73,7 +72,7 @@ namespace MicMute
 
             trayIcon = new NotifyIcon
             {
-                Icon = isMuted ? new Icon("mic_off.ico") : new Icon("mic_on.ico"),
+                Icon = isMuted ? new Icon(iconOffPath) : new Icon(iconOnPath),
                 Text = string.Format("MicMute: Microphone is {0}", isMuted ? Translations.MicrophoneOff(config.AppLanguage) : Translations.MicrophoneOn(config.AppLanguage)),
                 Visible = true
             };
@@ -109,7 +108,7 @@ namespace MicMute
             
             menu.Items.Add(new ToolStripSeparator());
 
-            var versionItem = new ToolStripMenuItem(string.Format("MicMute {0} – by rjcncpt", Version));
+            var versionItem = new ToolStripMenuItem(string.Format("MicMute {0} – by reaperhammer", Version));
             versionItem.Enabled = false;
             versionItem.Font = new Font(SystemFonts.DefaultFont, FontStyle.Bold);
             menu.Items.Add(versionItem);
@@ -297,6 +296,59 @@ namespace MicMute
             }
         }
 
+        private static bool SetSystemMicrophoneMuteState(bool mute)
+        {
+            IntPtr deviceEnumerator = IntPtr.Zero;
+            IntPtr device = IntPtr.Zero;
+            IntPtr endpointVolume = IntPtr.Zero;
+
+            try
+            {
+                Guid clsid = CLSID_MMDeviceEnumerator;
+                Guid iid = IID_IMMDeviceEnumerator;
+                
+                int hr = CoCreateInstance(ref clsid, IntPtr.Zero, 1, ref iid, out deviceEnumerator);
+                if (hr != 0 || deviceEnumerator == IntPtr.Zero)
+                    return false;
+
+                var vtbl = (IMMDeviceEnumeratorVtbl)Marshal.PtrToStructure(
+                    Marshal.ReadIntPtr(deviceEnumerator), typeof(IMMDeviceEnumeratorVtbl));
+                
+                hr = vtbl.GetDefaultAudioEndpoint(deviceEnumerator, 1, 0, out device);
+                if (hr != 0 || device == IntPtr.Zero)
+                    return false;
+
+                var deviceVtbl = (IMMDeviceVtbl)Marshal.PtrToStructure(
+                    Marshal.ReadIntPtr(device), typeof(IMMDeviceVtbl));
+                
+                Guid volumeIid = IID_IAudioEndpointVolume;
+                hr = deviceVtbl.Activate(device, ref volumeIid, 0, IntPtr.Zero, out endpointVolume);
+                if (hr != 0 || endpointVolume == IntPtr.Zero)
+                    return false;
+
+                var volumeVtbl = (IAudioEndpointVolumeVtbl)Marshal.PtrToStructure(
+                    Marshal.ReadIntPtr(endpointVolume), typeof(IAudioEndpointVolumeVtbl));
+                
+                Guid eventContext = Guid.Empty;
+                hr = volumeVtbl.SetMute(endpointVolume, mute ? 1 : 0, ref eventContext);
+                
+                return hr == 0;
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                if (endpointVolume != IntPtr.Zero)
+                    Marshal.Release(endpointVolume);
+                if (device != IntPtr.Zero)
+                    Marshal.Release(device);
+                if (deviceEnumerator != IntPtr.Zero)
+                    Marshal.Release(deviceEnumerator);
+            }
+        }
+
         private static void LoadMicStateFromFile()
         {
             if (File.Exists(configFile))
@@ -364,6 +416,7 @@ namespace MicMute
             public IntPtr QueryInterface;
             public IntPtr AddRef;
             public IntPtr Release;
+            public IntPtr EnumAudioEndpoints;
             public GetDefaultAudioEndpointDelegate GetDefaultAudioEndpoint;
 
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -434,18 +487,54 @@ namespace MicMute
         {
             isMuted = muted;
             
-            IntPtr hwnd = GetForegroundWindow();
-            SendMessageW(hwnd, WM_APPCOMMAND, hwnd, (IntPtr)APPCOMMAND_MICROPHONE_VOLUME_MUTE);
+            SetSystemMicrophoneMuteState(muted);
             
             UpdateTrayIcon();
             SaveMicStateToFile();
+            PlaySound(muted);
+        }
+
+        private static void PlaySound(bool muted)
+        {
+            SoundPlayer newPlayer = null;
+            try
+            {
+                string exeDir = Path.GetDirectoryName(Application.ExecutablePath);
+                string wavFile = Path.Combine(exeDir, muted ? "mic_off.wav" : "mic_on.wav");
+                
+                if (!File.Exists(wavFile))
+                    return;
+
+                newPlayer = new SoundPlayer(wavFile);
+                
+                // Clean up previous player safely
+                SoundPlayer oldPlayer = soundPlayer;
+                soundPlayer = newPlayer;
+                newPlayer = null; // marked disposed below
+                
+                if (oldPlayer != null)
+                {
+                    try { oldPlayer.Stop(); oldPlayer.Dispose(); } catch { }
+                }
+                
+                soundPlayer.Play();
+            }
+            catch (Exception)
+            {
+                // Sound feedback is best-effort — fail silently
+            }
+            finally
+            {
+                if (newPlayer != null)
+                    try { newPlayer.Dispose(); } catch { }
+            }
         }
 
         private static void UpdateTrayIcon()
         {
             try
             {
-                trayIcon.Icon = isMuted ? new Icon("mic_off.ico") : new Icon("mic_on.ico");
+                trayIcon.Icon = isMuted ? new Icon(iconOffPath) : new Icon(iconOnPath);
                 trayIcon.Text = string.Format("MicMute: Microphone is {0}", isMuted ? Translations.MicrophoneOff(config.AppLanguage) : Translations.MicrophoneOn(config.AppLanguage));
 
                 muteItem.Visible = !isMuted;
