@@ -105,7 +105,7 @@ namespace MicMute
             
             menu.Items.Add(new ToolStripSeparator());
 
-            var versionItem = new ToolStripMenuItem(string.Format("MicMute {0} – by rjcncpt", Version));
+            var versionItem = new ToolStripMenuItem(string.Format("MicMute {0} – by reaperhammer", Version));
             versionItem.Enabled = false;
             versionItem.Font = new Font(SystemFonts.DefaultFont, FontStyle.Bold);
             menu.Items.Add(versionItem);
